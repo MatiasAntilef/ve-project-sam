@@ -25,7 +25,7 @@ Resources:
   VideosTable:
     Type: AWS::DynamoDB::Table
     Properties:
-      TableName: TABLE_NAME
+      TableName: VIDEO_DETAILS
       BillingMode: PAY_PER_REQUEST
       AttributeDefinitions:
         - AttributeName: user_id
@@ -37,18 +37,6 @@ Resources:
           KeyType: HASH
         - AttributeName: video_id
           KeyType: RANGE
-
-  HelloWorldFunction:
-    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
-    Properties:
-      CodeUri: hello-world/
-      Handler: app.lambdaHandler
-      Events:
-        HelloWorld:
-          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
-          Properties:
-            Path: /hello
-            Method: get
 
   CreateVideoFunction:
     Type: AWS::Serverless::Function
