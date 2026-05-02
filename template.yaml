@@ -1,4 +1,4 @@
-AWSTemplateFormatVersion: '2010-09-09'
+AWSTemplateFormatVersion: "2010-09-09"
 Transform: AWS::Serverless-2016-10-31
 Description: >
   ve-project-sam
@@ -9,37 +9,84 @@ Description: >
 Globals:
   Function:
     Timeout: 3
+    Runtime: nodejs24.x
+    Architectures:
+      - x86_64
 
     # You can add LoggingConfig parameters such as the Logformat, Log Group, and SystemLogLevel or ApplicationLogLevel. Learn more here https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html#sam-function-loggingconfig.
     LoggingConfig:
       LogFormat: JSON
 Resources:
-  HelloWorldFunction:
-    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+  DataBucket:
+    Type: AWS::S3::Bucket
     Properties:
-      CodeUri: hello-world/
+      BucketName: !Sub "ve-project-${AWS::AccountId}-${AWS::Region}-data"
+
+  VideosTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: VIDEO_DETAILS
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: user_id
+          AttributeType: S
+        - AttributeName: video_id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: user_id
+          KeyType: HASH
+        - AttributeName: video_id
+          KeyType: RANGE
+
+  CreateVideoFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: create-video/
       Handler: app.lambdaHandler
-      Runtime: nodejs24.x
-      Architectures:
-      - x86_64
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref VideosTable
+          DATA_BUCKET: !Ref DataBucket
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref VideosTable
+        - S3WritePolicy:
+            BucketName: !Ref DataBucket
       Events:
-        HelloWorld:
-          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+        CreateVideo:
+          Type: Api
           Properties:
-            Path: /hello
-            Method: get
+            Path: /videos
+            Method: post
+
+  ProcessUploadFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: process-video-upload/
+      Handler: app.lambdaHandler
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref VideosTable
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref VideosTable
+      Events:
+        S3Upload:
+          Type: S3
+          Properties:
+            Bucket: !Ref DataBucket
+            Events: s3:ObjectCreated:*
+            Filter:
+              S3Key:
+                Rules:
+                  - Name: prefix
+                    Value: users/
 
 Outputs:
   # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
   # Find out more about other implicit resources you can reference within SAM
   # https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#api
-  HelloWorldApi:
-    Description: API Gateway endpoint URL for Prod stage for Hello World 
+  APIGatewayEndpoints:
+    Description: API Gateway endpoint URL for Prod stage for Hello World
       function
     Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.${AWS::URLSuffix}/Prod/hello/"
-  HelloWorldFunction:
-    Description: Hello World Lambda Function ARN
-    Value: !GetAtt HelloWorldFunction.Arn
-  HelloWorldFunctionIamRole:
-    Description: Implicit IAM Role created for Hello World function
-    Value: !GetAtt HelloWorldFunctionRole.Arn
