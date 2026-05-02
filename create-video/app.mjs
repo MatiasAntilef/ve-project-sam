@@ -30,7 +30,7 @@ export const lambdaHandler = async (event, context) => {
       user_id: userId,
       video_id: videoId,
       video_name: videoName,
-      video_status: "PENDING_UPLOAD",
+      video_status: "PENDING",
       video_key: videoKey,
       created_at: new Date().toISOString(),
     };
@@ -42,7 +42,7 @@ export const lambdaHandler = async (event, context) => {
       }),
     );
 
-    const response = {
+    return {
       statusCode: 201,
       body: JSON.stringify({
         message: "Video created successfully",
@@ -51,8 +51,6 @@ export const lambdaHandler = async (event, context) => {
         presignedUrl: presignedUrl,
       }),
     };
-
-    return response;
   } catch (err) {
     console.log(err);
 

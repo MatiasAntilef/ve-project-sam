@@ -4,25 +4,23 @@ import { DynamoDBDocumentClient, UpdateCommand } from "@aws-sdk/lib-dynamodb";
 const ddb = DynamoDBDocumentClient.from(new DynamoDBClient({}));
 
 export const lambdaHandler = async (event) => {
+  console.log("S3 event:", JSON.stringify(event, null, 2));
   try {
-    console.log("S3 event:", JSON.stringify(event, null, 2));
-
-    for (const record of event.Records) {
+    const processRegisters = event.Records.map(async (record) => {
       const bucket = record.s3.bucket.name;
       const rawKey = record.s3.object.key;
       const key = decodeURIComponent(rawKey.replace(/\+/g, " "));
 
-      // key esperado:
-      // users/test123/videos/<videoId>/<videoName>
-      const parts = key.split("/");
+      // ruta key esperada:  users/{userId}/videos/{videoId}/{videoName}
+      const match = key.match(/^users\/([^\/]+)\/videos\/([^\/]+)\//);
 
-      const userId = parts[1];
-      const videoId = parts[3];
-
-      if (!userId || !videoId) {
-        console.warn("Invalid key format:", key);
-        continue;
+      if (!match) {
+        console.warn("Key invalido ", key);
+        return;
       }
+
+      const userId = match[1];
+      const videoId = match[2];
 
       await ddb.send(
         new UpdateCommand({
@@ -32,7 +30,10 @@ export const lambdaHandler = async (event) => {
             video_id: videoId,
           },
           UpdateExpression:
-            "SET video_status = :status, uploaded_at = :uploadedAt, bucket = :bucket",
+            "SET video_status = :status, uploaded_at = :uploadedAt, #b = :bucket",
+          ExpressionAttributeNames: {
+            "#b": "bucket",
+          },
           ExpressionAttributeValues: {
             ":status": "UPLOADED",
             ":uploadedAt": new Date().toISOString(),
@@ -47,23 +48,12 @@ export const lambdaHandler = async (event) => {
         bucket,
         key,
       });
-    }
+    });
 
-    return {
-      statusCode: 200,
-      body: JSON.stringify({
-        message: "Upload processed",
-      }),
-    };
+    await Promise.all(processRegisters);
+    console.log("Registers -", event.Records.length);
   } catch (err) {
-    console.error(err);
-
-    return {
-      statusCode: 500,
-      body: JSON.stringify({
-        message: "Error processing upload",
-        error: err.message,
-      }),
-    };
+    console.error("Error to update video status:", err);
+    throw err;
   }
 };
