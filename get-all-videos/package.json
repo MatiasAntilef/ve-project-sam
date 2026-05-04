@@ -1,0 +1,10 @@
+{
+  "name": "get-all-videos",
+  "version": "1.0.0",
+  "description": "Get all videos lambda",
+  "type": "module",
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.1038.0",
+    "@aws-sdk/lib-dynamodb": "^3.1038.0"
+  }
+}

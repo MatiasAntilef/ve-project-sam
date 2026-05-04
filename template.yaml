@@ -77,6 +77,24 @@ Resources:
             Path: /videos/{videoId}
             Method: get
 
+  GetAllVideosFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: get-all-videos/
+      Handler: app.lambdaHandler
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref VideosTable
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref VideosTable
+      Events:
+        GetAllVideos:
+          Type: Api
+          Properties:
+            Path: /videos
+            Method: get
+
   ProcessUploadFunction:
     Type: AWS::Serverless::Function
     Properties:
