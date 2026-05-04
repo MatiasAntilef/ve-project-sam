@@ -1,6 +1,7 @@
 {
   "name": "process-video-upload",
   "version": "1.0.0",
+  "description": "Event S3 for upload status of video",
   "type": "module",
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.0.0",

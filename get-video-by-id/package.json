@@ -1,0 +1,10 @@
+{
+  "name": "get-video-by-id",
+  "version": "1.0.0",
+  "description": "Get video by ID lambda",
+  "type": "module",
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.1038.0",
+    "@aws-sdk/lib-dynamodb": "^3.1038.0"
+  }
+}
