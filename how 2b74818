@@ -1,0 +1,14 @@
+* [33m559d39f[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mdev[m[33m)[m add get video by id
+[31m|[m * [33me7e8b67[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m Update README.md
+[31m|[m *   [33m98909ad[m Merge pull request #1 from MatiasAntilef/dev
+[31m|[m [33m|[m[34m\[m  
+[31m|[m [33m|[m * [33m2b74818[m[33m ([m[1;31morigin/dev[m[33m)[m Merge branch 'main' into dev
+[31m|[m [33m|[m[31m/[m[33m|[m 
+[31m|[m[31m/[m[33m|[m[33m/[m  
+[31m|[m * [33mcc3fcce[m Update README.md
+* [36m|[m [33m3702c66[m doc create-video & process-video-upload
+* [36m|[m [33m261e16d[m function event-drive upload video_status
+* [36m|[m [33m127e7a1[m remove hello-world default
+* [36m|[m [33m7da41dc[m create-video for presignedURL to s3 and process-video (in development), for modify dynamoDB status_video
+[36m|[m[36m/[m  
+* [33m3a9f1f3[m[33m ([m[1;32mmain[m[33m)[m init: SAM project base
