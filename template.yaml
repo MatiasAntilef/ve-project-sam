@@ -95,6 +95,11 @@ Resources:
             Path: /videos
             Method: get
 
+  TranscriptionQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub "${AWS::StackName}-transcription-queue"
+
   ProcessUploadFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -103,9 +108,12 @@ Resources:
       Environment:
         Variables:
           TABLE_NAME: !Ref VideosTable
+          TRANSCRIPTION_QUEUE_URL: !Ref TranscriptionQueue
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref VideosTable
+        - SQSSendMessagePolicy:
+            QueueName: !GetAtt TranscriptionQueue.QueueName
       Events:
         S3Upload:
           Type: S3
@@ -117,6 +125,35 @@ Resources:
                 Rules:
                   - Name: prefix
                     Value: users/
+
+  CreateTranscriptionFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: create-transcription/
+      Handler: app.lambdaHandler
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref VideosTable
+          DATA_BUCKET: !Ref DataBucket
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref VideosTable
+        - S3ReadPolicy:
+            BucketName: !Ref DataBucket
+        - S3WritePolicy:
+            BucketName: !Ref DataBucket
+        - Statement:
+            Effect: Allow
+            Action:
+              - transcribe:StartTranscriptionJob
+              - transcribe:GetTranscriptionJob
+            Resource: "*"
+      Events:
+        TranscriptionQueue:
+          Type: SQS
+          Properties:
+            Queue: !GetAtt TranscriptionQueue.Arn
+            BatchSize: 1
 
 Outputs:
   # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function

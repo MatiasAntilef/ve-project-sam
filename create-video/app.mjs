@@ -30,8 +30,18 @@ export const lambdaHandler = async (event, context) => {
       user_id: userId,
       video_id: videoId,
       video_name: videoName,
-      video_status: "PENDING",
       video_key: videoKey,
+      video_status: "PENDING",
+      options: {
+        transcription: {
+          enabled: body.transcriptionEnabled || false,
+          status: "NOT_STARTED",
+        },
+        dub: {
+          enabled: body.dubEnabled || false,
+          status: "NOT_STARTED",
+        },
+      },
       created_at: new Date().toISOString(),
     };
 
