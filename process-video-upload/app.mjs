@@ -1,10 +1,15 @@
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
-import { DynamoDBDocumentClient, UpdateCommand } from "@aws-sdk/lib-dynamodb";
+import {
+  DynamoDBDocumentClient,
+  UpdateCommand,
+  GetCommand,
+} from "@aws-sdk/lib-dynamodb";
+import { SQSClient, SendMessageCommand } from "@aws-sdk/client-sqs";
 
 const ddb = DynamoDBDocumentClient.from(new DynamoDBClient({}));
+const sqs = new SQSClient({});
 
 export const lambdaHandler = async (event) => {
-  console.log("S3 event:", JSON.stringify(event, null, 2));
   try {
     const processRegisters = event.Records.map(async (record) => {
       const bucket = record.s3.bucket.name;
@@ -21,6 +26,23 @@ export const lambdaHandler = async (event) => {
 
       const userId = match[1];
       const videoId = match[2];
+
+      const videoResponse = await ddb.send(
+        new GetCommand({
+          TableName: process.env.TABLE_NAME,
+          Key: {
+            user_id: userId,
+            video_id: videoId,
+          },
+        }),
+      );
+
+      if (!videoResponse.Item) {
+        console.warn("Video not found in DynamoDB:", { userId, videoId });
+        return;
+      }
+
+      const video = videoResponse.Item;
 
       await ddb.send(
         new UpdateCommand({
@@ -42,6 +64,24 @@ export const lambdaHandler = async (event) => {
         }),
       );
 
+      if (video.options?.transcription?.enabled) {
+        await sqs.send(
+          new SendMessageCommand({
+            QueueUrl: process.env.TRANSCRIPTION_QUEUE_URL,
+            MessageBody: JSON.stringify({
+              task: "TRANSCRIPTION",
+              userId,
+              videoId,
+              bucket,
+              videoKey: key,
+              videoName: video.video_name,
+            }),
+          }),
+        );
+
+        console.log("Task transcription AWS to SQS ", { userId, videoId });
+      }
+
       console.log("Video marked as UPLOADED:", {
         userId,
         videoId,
@@ -51,7 +91,7 @@ export const lambdaHandler = async (event) => {
     });
 
     await Promise.all(processRegisters);
-    console.log("Registers -", event.Records.length);
+    console.log("Registers - process-video-upload: ", event.Records.length);
   } catch (err) {
     console.error("Error to update video status:", err);
     throw err;
