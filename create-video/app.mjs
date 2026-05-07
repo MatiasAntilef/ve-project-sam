@@ -68,9 +68,6 @@ export const lambdaHandler = async (event, context) => {
       statusCode: 500,
       body: JSON.stringify({
         message: "Error creating video",
-        error: err.message,
-        videoBucket: process.env.DATA_BUCKET ?? "N/A",
-        tableName: process.env.TABLE_NAME ?? "N/A",
       }),
     };
   }

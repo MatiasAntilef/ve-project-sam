@@ -10,8 +10,6 @@ const transcribe = new TranscribeClient({});
 const ddb = DynamoDBDocumentClient.from(new DynamoDBClient({}));
 
 export const lambdaHandler = async (event) => {
-  console.log("SQS event:", JSON.stringify(event, null, 2));
-
   try {
     const records = event.Records ?? [];
 
@@ -51,6 +49,7 @@ export const lambdaHandler = async (event) => {
           }),
         );
 
+        // NOTA: LanguageCode, hay que cambiarlo a dinamico luego - pendiente
         await transcribe.send(
           new StartTranscriptionJobCommand({
             TranscriptionJobName: jobName,

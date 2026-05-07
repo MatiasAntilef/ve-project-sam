@@ -8,9 +8,8 @@ import { SQSClient, SendMessageCommand } from "@aws-sdk/client-sqs";
 
 const ddb = DynamoDBDocumentClient.from(new DynamoDBClient({}));
 const sqs = new SQSClient({});
-export const lambdaHandler = async (event) => {
-  console.log("S3 event:", JSON.stringify(event, null, 2));
 
+export const lambdaHandler = async (event) => {
   try {
     const processRegisters = event.Records.map(async (record) => {
       const bucket = record.s3.bucket.name;
@@ -92,7 +91,7 @@ export const lambdaHandler = async (event) => {
     });
 
     await Promise.all(processRegisters);
-    console.log("Registers -", event.Records.length);
+    console.log("Registers - process-video-upload: ", event.Records.length);
   } catch (err) {
     console.error("Error to update video status:", err);
     throw err;
