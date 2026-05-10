@@ -1,7 +1,10 @@
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocumentClient, GetCommand } from "@aws-sdk/lib-dynamodb";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
 
 const ddb = DynamoDBDocumentClient.from(new DynamoDBClient({}));
+const s3 = new S3Client({});
 
 export const lambdaHandler = async (event, context) => {
   try {
@@ -26,12 +29,27 @@ export const lambdaHandler = async (event, context) => {
         }),
       };
     }
+    const video = response.Item;
+
+    const videoUrl = await getSignedUrl(
+      s3,
+      new GetObjectCommand({
+        Bucket: process.env.BUCKET_NAME,
+        Key: video.video_key,
+      }),
+      { expiresIn: 60 * 15 },
+    );
+
+    response.Item.video_url = videoUrl;
 
     return {
       statusCode: 200,
       body: JSON.stringify({
         message: "Video retrieved successfully",
-        data: response.Item,
+        data: {
+          video_url: videoUrl,
+          ...video,
+        },
       }),
     };
   } catch (err) {
