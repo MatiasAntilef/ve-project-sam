@@ -65,9 +65,12 @@ Resources:
       Environment:
         Variables:
           TABLE_NAME: !Ref VideosTable
+          BUCKET_NAME: !Ref DataBucket
       Policies:
         - DynamoDBReadPolicy:
             TableName: !Ref VideosTable
+        - S3ReadPolicy:
+            BucketName: !Ref DataBucket
       Events:
         GetVideo:
           Type: Api
