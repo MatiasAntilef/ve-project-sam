@@ -1,7 +1,6 @@
 export interface VideoItem {
   user_id: string;
   video_id: string;
-
   video_name: string;
   video_key: string;
   video_status: "IN_PROGRESS" | "COMPLETED" | "FAILED";

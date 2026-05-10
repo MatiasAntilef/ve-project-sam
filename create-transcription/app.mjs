@@ -28,7 +28,7 @@ export const lambdaHandler = async (event) => {
           /[^0-9a-zA-Z._-]/g,
           "-",
         );
-        const outputKey = `users/${userId}/transcriptions/${videoId}/${videoName}.json`;
+        const outputKey = `transcriptions/${userId}/${videoId}/${videoName}.json`;
 
         await ddb.send(
           new UpdateCommand({

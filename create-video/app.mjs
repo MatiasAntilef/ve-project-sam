@@ -12,9 +12,9 @@ export const lambdaHandler = async (event, context) => {
     const userId = "test123";
 
     const body = event.body ? JSON.parse(event.body) : {};
-    const videoName = body.name || "Untitled Video";
+    const videoName = body.videoName || "Untitled Video";
 
-    const videoKey = `users/${userId}/videos/${videoId}/${videoName}`;
+    const videoKey = `videos/${userId}/${videoId}/${videoName}`;
 
     const presignedUrl = await getSignedUrl(
       s3,
@@ -57,7 +57,6 @@ export const lambdaHandler = async (event, context) => {
       body: JSON.stringify({
         message: "Video created successfully",
         videoId: videoId,
-        videoKey: videoKey,
         presignedUrl: presignedUrl,
       }),
     };

@@ -16,8 +16,8 @@ export const lambdaHandler = async (event) => {
       const rawKey = record.s3.object.key;
       const key = decodeURIComponent(rawKey.replace(/\+/g, " "));
 
-      // ruta key esperada:  users/{userId}/videos/{videoId}/{videoName}
-      const match = key.match(/^users\/([^\/]+)\/videos\/([^\/]+)\//);
+      // ruta key esperada:  videos/{userId}/{videoId}/{videoName}
+      const match = key.match(/^videos\/([^\/]+)\/([^\/]+)\//);
 
       if (!match) {
         console.warn("Key invalido ", key);
@@ -43,7 +43,6 @@ export const lambdaHandler = async (event) => {
       }
 
       const video = videoResponse.Item;
-
       await ddb.send(
         new UpdateCommand({
           TableName: process.env.TABLE_NAME,
@@ -79,19 +78,11 @@ export const lambdaHandler = async (event) => {
           }),
         );
 
-        console.log("Task transcription AWS to SQS ", { userId, videoId });
+        console.log("Task transcription sent to SQS ", { userId, videoId });
       }
-
-      console.log("Video marked as UPLOADED:", {
-        userId,
-        videoId,
-        bucket,
-        key,
-      });
     });
 
     await Promise.all(processRegisters);
-    console.log("Registers - process-video-upload: ", event.Records.length);
   } catch (err) {
     console.error("Error to update video status:", err);
     throw err;
