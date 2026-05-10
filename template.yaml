@@ -122,7 +122,33 @@ Resources:
               S3Key:
                 Rules:
                   - Name: prefix
-                    Value: users/
+                    Value: videos/
+
+  ProcessTranscriptionCompletedFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: process-transcription-completed/
+      Handler: app.lambdaHandler
+
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref VideosTable
+
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref VideosTable
+
+      Events:
+        TranscriptionCreated:
+          Type: S3
+          Properties:
+            Bucket: !Ref DataBucket
+            Events: s3:ObjectCreated:*
+            Filter:
+              S3Key:
+                Rules:
+                  - Name: prefix
+                    Value: transcriptions/
 
   CreateTranscriptionFunction:
     Type: AWS::Serverless::Function
